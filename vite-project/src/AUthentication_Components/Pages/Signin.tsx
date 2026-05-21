@@ -3,6 +3,8 @@ import "../styles/Signin.css";
 import { Link} from "react-router-dom";
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { auth, googleProvider } from "../../firebase";
+import { signInWithPopup } from "firebase/auth";
 
 function Signin(){
 
@@ -42,6 +44,25 @@ const handleSubmit = async (e: React.FormEvent) => {//e = event object i.e. It c
     }
   } catch (err) {
     console.log(err);
+  }
+};
+
+// Sign in with Google
+const handleGoogleSignIn = async (e: React.MouseEvent) => {
+  e.preventDefault(); // Stop form submission
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const idToken = await result.user.getIdToken(); // This is the secure token
+
+    // Send to your NEW backend route
+    const response = await axios.post("http://localhost:3000/google-auth", { idToken });
+
+    if (response.data.success) {
+      toast.success("Login Successful!");
+      // Redirect or save local state here
+    }
+  } catch (error: any) {
+    toast.error(error.message);
   }
 };
 
@@ -107,7 +128,9 @@ const handleSubmit = async (e: React.FormEvent) => {//e = event object i.e. It c
 </div>
 
 <div className="google_button">
-  <button type="submit" id="google_button">Sign up with Google</button>
+  <button type="button" id="google_button" onClick={handleGoogleSignIn}>
+    Sign up with Google
+  </button>
 </div>
 <p className="account_already">
   Already have an account?
