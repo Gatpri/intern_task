@@ -4,7 +4,7 @@ import { Link} from "react-router-dom";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { auth, googleProvider } from "../../firebase";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithRedirect } from "firebase/auth";
 
 function Signin(){
 
@@ -48,42 +48,25 @@ const handleSubmit = async (e: React.FormEvent) => {//e = event object i.e. It c
   }
 };
 
-// Sign in with Google using Popup (better UX - no page redirect)
+// Sign in with Google using Redirect (avoids popup-related COOP issues)
+const [isSigning, setIsSigning] = useState(false);
 const handleGoogleSignIn = async (e: React.MouseEvent<HTMLButtonElement>) => {
-  e.preventDefault(); // Stop form submission
-  console.log("Google Sign-In button clicked");
+  e.preventDefault();
+  if (isSigning) return;
+  setIsSigning(true);
+  console.log("Google Sign-In (redirect) triggered");
   try {
-    // Configure Google provider for proper popup handling
     googleProvider.setCustomParameters({ prompt: 'select_account' });
-    
-    // Use signInWithPopup instead of redirect - better UX, no page reload
-    const result = await signInWithPopup(auth, googleProvider);
-    const idToken = await result.user.getIdToken(); // Get the secure token
-
-    // Send to backend for authentication
-    const response = await axios.post("http://localhost:3000/google-auth", { 
-      idToken,
-      email: result.user.email,
-      displayName: result.user.displayName 
-    });
-
-    if (response.data.success) {
-      toast.success("Sign up Successful!");
-      clearForm();
-      // TODO: Redirect to dashboard or home page
-      // navigate("/dashboard");
-    } else {
-      toast.error(response.data.message || "Authentication failed");
-    }
+    // Redirects the browser to the provider sign-in page
+    await signInWithRedirect(auth, googleProvider);
+    // Note: after redirect the app will reload and `getRedirectResult` should be used to handle the response
   } catch (error: any) {
-    // Handle specific error cases
-    if (error.code === "auth/popup-closed-by-user") {
-      console.log("Sign-in popup closed by user");
-    } else if (error.code === "auth/popup-blocked") {
-      toast.error("Sign-in popup was blocked. Please allow popups and try again.");
+    setIsSigning(false);
+    if (error.code === 'auth/operation-not-supported-in-this-environment') {
+      toast.error('Redirect sign-in not supported in this environment');
     } else {
-      toast.error(error.message || "Google Sign-In failed");
-      console.error("Google Sign-In error:", error);
+      toast.error(error.message || 'Google Sign-In failed');
+      console.error('Google Sign-In error:', error);
     }
   }
 };
@@ -149,9 +132,9 @@ const handleGoogleSignIn = async (e: React.MouseEvent<HTMLButtonElement>) => {
   <button type="submit" id="button">Create Account</button>
 </div>
 
-<div className="google_button">
-  <button type="button" id="google_button" onClick={handleGoogleSignIn}>
-    Sign up with Google
+  <div className="google_button">
+  <button type="button" id="google_button" onClick={handleGoogleSignIn} disabled={isSigning}>
+    {isSigning ? 'Signing in...' : 'Sign up with Google'}
   </button>
 </div>
 <p className="account_already">

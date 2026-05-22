@@ -1,5 +1,10 @@
 import './App.css'
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from 'react';
+import axios from 'axios';
+import { getRedirectResult } from 'firebase/auth';
+import { auth } from './firebase';
+import { toast } from 'react-toastify';
 import Login from "./AUthentication_Components/Pages/Login";
 import Signin from "./AUthentication_Components/Pages/Signin";
 import Recover from './AUthentication_Components/Pages/Recover';
@@ -9,6 +14,27 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App(){
+
+  useEffect(() => {
+    const handleRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const idToken = await result.user.getIdToken();
+          const response = await axios.post("http://localhost:3000/google-auth", { idToken, email: result.user.email, displayName: result.user.displayName });
+          if (response.data.success) {
+            toast.success("Sign in successful");
+          } else {
+            toast.error(response.data.message || "Authentication failed");
+          }
+        }
+      } catch (err: any) {
+        // Redirect flow errors are often benign; log for debugging
+        console.error('getRedirectResult error:', err);
+      }
+    };
+    handleRedirect();
+  }, []);
 
   return(
 <>
