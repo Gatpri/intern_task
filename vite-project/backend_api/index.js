@@ -9,14 +9,20 @@ import googleAuthRoutes from "./routes/google_auth_signup.js";
 import mongoose from "mongoose";
 import admin from "firebase-admin";
 
-// Initialize Firebase Admin from environment variables
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-  })
-});
+// Initialize Firebase Admin from environment variables (safe)
+if (!admin.apps.length) {
+  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+    console.warn('Firebase Admin credentials not found. Please create backend_api/.env with FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
+  } else {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      })
+    });
+  }
+}
 
 const app = express();
 
@@ -24,21 +30,13 @@ const app = express();
 
 // Configure CORS properly for Firebase authentication
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:3000"],
+  origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
-
-// Add security headers for Firebase popup authentication
-app.use((req, res, next) => {
-  res.header("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
 
 app.use(express.json());
 

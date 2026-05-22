@@ -7,6 +7,10 @@ const router = express.Router();
 router.post("/google-auth", async (req, res) => {
   const { idToken } = req.body;
 
+  if (!idToken) {
+    return res.status(400).json({ success: false, message: "No ID token provided" });
+  }
+
   try {
     //  Verify the token with Google/Firebase
     const decodedToken = await admin.auth().verifyIdToken(idToken);
@@ -30,7 +34,8 @@ router.post("/google-auth", async (req, res) => {
 
     res.json({ success: true, user });
   } catch (err) {
-    res.status(401).json({ success: false, message: "Invalid Token" });
+    console.error("❌ Google Auth Error:", err.message || err);
+    res.status(401).json({ success: false, message: "Invalid Token: " + (err.message || err) });
   }
 });
 

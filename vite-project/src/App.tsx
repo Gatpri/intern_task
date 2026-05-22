@@ -1,5 +1,5 @@
 import './App.css'
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useEffect } from 'react';
 import axios from 'axios';
 import { getRedirectResult } from 'firebase/auth';
@@ -14,6 +14,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App(){
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleRedirect = async () => {
@@ -24,6 +25,7 @@ function App(){
           const response = await axios.post("http://localhost:3000/google-auth", { idToken, email: result.user.email, displayName: result.user.displayName });
           if (response.data.success) {
             toast.success("Sign in successful");
+            navigate('/home');
           } else {
             toast.error(response.data.message || "Authentication failed");
           }
@@ -34,7 +36,7 @@ function App(){
       }
     };
     handleRedirect();
-  }, []);
+  }, [navigate]);
 
   return(
 <>

@@ -23,11 +23,19 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment files and Firebase credentials
+# Environment files and Firebase credentials - NEVER COMMIT THESE!
 .env
 .env.local
 .env.*.local
+.env.*.local.*
 backend_api/.env
+backend_api/serviceAccountKey.json
 serviceAccountKey.json
 *.json.key
+*.pem
+*.key
+
+# IDE
+.env.prod.local
+
 

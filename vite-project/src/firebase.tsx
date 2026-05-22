@@ -8,13 +8,13 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCImPvwwHlxWkhkjuOS-irORN3wsteBTR4",
-  authDomain: "vite-project-b6c97.firebaseapp.com",
-  projectId: "vite-project-b6c97",
-  storageBucket: "vite-project-b6c97.firebasestorage.app",
-  messagingSenderId: "230648309457",
-  appId: "1:230648309457:web:8c6179a5a2680ddc0107f0",
-  measurementId: "G-2CR4YX90WS"
+   apiKey: "AIzaSyDUi2c04DY0qjZ3yHGqm9sZ24nb4PYNy8s",
+  authDomain: "vite-e5c25.firebaseapp.com",
+  projectId: "vite-e5c25",
+  storageBucket: "vite-e5c25.firebasestorage.app",
+  messagingSenderId: "1035830726436",
+  appId: "1:1035830726436:web:251f3eb9fede9915a8edb1",
+  measurementId: "G-PTYSQB10LB"
 };
 
 
@@ -22,13 +22,14 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// ✅ wrapped so it doesn't crash on localhost
+// Initialize analytics only where available (guards SSR / non-browser env)
+let _analytics = null;
 try {
-  getAnalytics(app);
+  _analytics = getAnalytics(app);
 } catch (e) {
   console.log("Analytics not available in this environment");
 }
 
-export const analytics = getAnalytics(app);
+export const analytics = _analytics;
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
