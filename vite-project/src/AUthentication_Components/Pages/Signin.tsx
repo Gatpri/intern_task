@@ -20,6 +20,7 @@ function Signin(){
     setPassword("");
   };
 
+
 const handleSubmit = async (e: React.FormEvent) => {//e = event object i.e. It contains info about what just happened (form submit) and its type is React.FormEvent
   e.preventDefault();//this stops page refresh or reload
 
@@ -47,22 +48,43 @@ const handleSubmit = async (e: React.FormEvent) => {//e = event object i.e. It c
   }
 };
 
-// Sign in with Google
-const handleGoogleSignIn = async (e: React.MouseEvent) => {
+// Sign in with Google using Popup (better UX - no page redirect)
+const handleGoogleSignIn = async (e: React.MouseEvent<HTMLButtonElement>) => {
   e.preventDefault(); // Stop form submission
+  console.log("Google Sign-In button clicked");
   try {
+    // Configure Google provider for proper popup handling
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+    
+    // Use signInWithPopup instead of redirect - better UX, no page reload
     const result = await signInWithPopup(auth, googleProvider);
-    const idToken = await result.user.getIdToken(); // This is the secure token
+    const idToken = await result.user.getIdToken(); // Get the secure token
 
-    // Send to your NEW backend route
-    const response = await axios.post("http://localhost:3000/google-auth", { idToken });
+    // Send to backend for authentication
+    const response = await axios.post("http://localhost:3000/google-auth", { 
+      idToken,
+      email: result.user.email,
+      displayName: result.user.displayName 
+    });
 
     if (response.data.success) {
-      toast.success("Login Successful!");
-      // Redirect or save local state here
+      toast.success("Sign up Successful!");
+      clearForm();
+      // TODO: Redirect to dashboard or home page
+      // navigate("/dashboard");
+    } else {
+      toast.error(response.data.message || "Authentication failed");
     }
   } catch (error: any) {
-    toast.error(error.message);
+    // Handle specific error cases
+    if (error.code === "auth/popup-closed-by-user") {
+      console.log("Sign-in popup closed by user");
+    } else if (error.code === "auth/popup-blocked") {
+      toast.error("Sign-in popup was blocked. Please allow popups and try again.");
+    } else {
+      toast.error(error.message || "Google Sign-In failed");
+      console.error("Google Sign-In error:", error);
+    }
   }
 };
 

@@ -8,21 +8,39 @@ import recoverRoutes from "./routes/password_recover.js";
 import googleAuthRoutes from "./routes/google_auth_signup.js";
 import mongoose from "mongoose";
 import admin from "firebase-admin";
-import { readFileSync } from "fs";
-const serviceAccount = JSON.parse(
-  readFileSync(new URL("./serviceAccountKey.json", import.meta.url))
-);
 
+// Initialize Firebase Admin from environment variables
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+  })
 });
 
 const app = express();
 
-
 //middleware
 
-app.use(cors());
+// Configure CORS properly for Firebase authentication
+const corsOptions = {
+  origin: ["http://localhost:5173", "http://localhost:3000"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+
+// Add security headers for Firebase popup authentication
+app.use((req, res, next) => {
+  res.header("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.header("Cross-Origin-Embedder-Policy", "require-corp");
+  res.header("Access-Control-Allow-Origin", req.headers.origin);
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 app.use(express.json());
 
 //connectDB

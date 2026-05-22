@@ -17,8 +17,18 @@ const firebaseConfig = {
   measurementId: "G-2CR4YX90WS"
 };
 
+
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// ✅ wrapped so it doesn't crash on localhost
+try {
+  getAnalytics(app);
+} catch (e) {
+  console.log("Analytics not available in this environment");
+}
+
 export const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
